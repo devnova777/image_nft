@@ -9,7 +9,7 @@
     <script src="./Image.json"></script>
 </head>
 <body>
-    <form action="javascript:received()">
+    <form action="javascript:createNFT()">
         <h2>Create a new NFT Here:</h2>
         <!-- <label for="address">Address:</label> -->
         <!-- <input type="text" id="address" name="address"><br><br> -->
@@ -34,7 +34,23 @@
         $.getJSON("./Image.json", (returnedValue)=> {console.log("successfully retreived json object."); Image = returnedValue;});
 
         function received(){
-            console.log("received these parameters: " + "ID=" + $("#ID").val() + "and amount=" + $("#amount").val() + " and url=" + $("#url").val());
+            console.log("Received these parameters: " + "ID=" + $("#ID").val() + "and amount=" + $("#amount").val() + " and url=" + $("#url").val());
+        }
+
+        async function createNFT(){
+            console.log("Attempting to create an NFT...");
+            received();
+            const result1 = await contract.methods.uri(2).call();
+            console.log(result1);
+            console.log("Account being used: ");
+            console.log(account);
+            const token1 = await contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account });
+
+
+        }
+
+        function getExistingNFTs(){
+// const tokens = 
         }
 
         async function loadWeb3(){
