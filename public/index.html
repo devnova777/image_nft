@@ -1,0 +1,105 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image NFT: Client-Side Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="module" src="../web3.min.js"></script>
+    <script src="./Image.json"></script>
+</head>
+<body>
+    <form action="javascript:received()">
+        <h2>Create a new NFT Here:</h2>
+        <!-- <label for="address">Address:</label> -->
+        <!-- <input type="text" id="address" name="address"><br><br> -->
+        <label for="ID">ID:</label>
+        <input type="text" id="ID" name="ID"><br><br>
+        <label for="amount">Amount:</label>
+        <input type="text" id="amount" name="amount""><br><br>
+        <label for="url">url:</label>
+        <input type="text" id="url" name="url"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+
+
+    <script type="text/javascript">
+
+        var account = "";
+        var totalSupply = 0;
+        var images = [];
+        var contract;
+        var Image;
+        $.getJSON("./Image.json", (returnedValue)=> {console.log("successfully retreived json object."); Image = returnedValue;});
+
+        function received(){
+            console.log("received these parameters: " + "ID=" + $("#ID").val() + "and amount=" + $("#amount").val() + " and url=" + $("#url").val());
+        }
+
+        async function loadWeb3(){
+            console.log("loading web3...");
+            if(window.ethereum){
+            console.log("modern web3 usage branch");
+            window.web3 = new Web3(window.ethereum);
+            await window.ethereum.enable();
+            }
+            else if (window.web3){
+            console.log("old web3 usage branch");
+            window.web3 = new Web3(window.web3.currentProvider);
+            }
+            else{
+            window.alert("Non-ethereum Browser being used. Install MetaMask!");
+            }
+        }
+
+        async function loadBlockchain(){
+            console.log("loading blockchain...");
+            const web3 = window.web3;
+            const ethaccounts = await web3.eth.getAccounts(); //get all accounts in metamask
+            //the eth account used from metamask
+            account = ethaccounts[0];
+            console.log("Account: ");
+            console.log(account);
+
+            const networkId = await web3.eth.net.getId(); // to find the correct address
+            console.log(networkId);
+
+            const networkData = Image.networks[networkId];
+
+            console.log(networkId);
+            console.log(networkData);
+
+            if(networkData){
+            const abi = Image.abi;
+            const address = networkData.address;
+            const c = new web3.eth.Contract(abi, address);
+
+            contract = c;
+
+            console.log("The Image Contract: ");
+            console.log(contract);
+            // const ts = await contract.methods.totalSupply().call();
+            // totalSupply = ts;
+            // console.log(totalSupply);
+            // for(var i = 1; i<=totalSupply; i++){
+            //     const image = await contract.methods.imageList(i-1).call();
+            //     images.push(image);
+            // }
+            // console.log(images);
+            }
+            else{
+            window.alert("The Smart Contract Image is not deployed on this network!");
+            }
+        }
+
+        $('document').ready(
+            async function connectToBlockchain(){
+                console.log("blockchain initializing...");
+                await loadWeb3();
+                await loadBlockchain();
+            }
+        );
+    </script>
+</body>
+</html>
