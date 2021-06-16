@@ -22,6 +22,9 @@
         <input type="submit" value="Submit">
     </form>
 
+    <div id="all-retrieved-data">
+    </div>
+
 
 
     <script type="text/javascript">
@@ -31,10 +34,30 @@
         var images = [];
         var contract;
         var Image;
-        $.getJSON("./Image.json", (returnedValue)=> {console.log("successfully retreived json object."); Image = returnedValue;});
+        $.getJSON("./Image.json", (returnedValue)=> {console.log("Successfully retreived Image Contract json object."); Image = returnedValue;});
 
         function received(){
             console.log("Received these parameters: " + "ID=" + $("#ID").val() + "and amount=" + $("#amount").val() + " and url=" + $("#url").val());
+        }
+
+        function getPinataAttributes(pinataJSON){
+            var formattedString = '';
+            for(i=0; i<pinataJSON.attributes.length; i++){
+                formattedString += pinataJSON.attributes[i].trait_type + ": " + pinataJSON.attributes[i].value + "\n";
+            }
+            console.log(formattedString);
+            return formattedString;
+        }
+
+        function getPinataImgSrc(pinataJSON){
+            const baseURL = 'https://gateway.pinata.cloud/ipfs/';
+            console.log(baseURL + pinataJSON.image.split('://')[1]);
+            return baseURL + pinataJSON.image.split('://')[1];
+        }
+
+        function updatePage(){
+            location.reload();
+            getExistingNFTs();
         }
 
         async function createNFT(){
@@ -46,11 +69,40 @@
             contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account, gasLimit: 210000, gas:1000000});
             // const result1 = contract.methods.uri(7).call();
             // console.log(result1);
+            updatePage();
 
         }
 
-        function getExistingNFTs(){
-// const tokens = 
+        async function getExistingNFTs(){
+            const baseURL = 'https://gateway.pinata.cloud/ipfs/';
+            var pinataJSON;
+            const totalSupply = await contract.methods.getTotalSupply().call();
+            console.log("TotalSupply=" + totalSupply);
+            
+            console.log("URIs:");
+            var currentURI = '';
+            for(var i = 1; i<=totalSupply; i++){
+                currentURI = await contract.methods.uri(i).call();
+                // console.log(currentURI);
+                // const image = await contract.methods.imageList(i-1).call();
+                // images.push(image);
+                var added = baseURL + currentURI.split('://')[1];
+                // console.log(added);
+                $.getJSON(added, (returnedValue)=> {
+                    console.log("Successfully retreived json object from pinata."); 
+                    pinataJSON = returnedValue; 
+                    console.log(pinataJSON);
+                    console.log("Appending:" + pinataJSON.name);
+                    $('#all-retrieved-data').append('<div border-color="black"><h4> Name: '+pinataJSON.name+'</h4>'+
+                                                          '<p> Description: '+pinataJSON.description+'</p>'+
+                                                          '<p> URI: '+pinataJSON.image+'</p>'+
+                                                          '<p>'+ getPinataAttributes(pinataJSON) +'</p>'+
+                                                          '<img src=' + getPinataImgSrc(pinataJSON) +' height=500, width=400/>'+
+                                                    '</div>' + '<br>')
+                });
+                // console.log(pinataJSON);
+            }
+            
         }
 
         async function loadWeb3(){
@@ -114,6 +166,7 @@
                 console.log("blockchain initializing...");
                 await loadWeb3();
                 await loadBlockchain();
+                getExistingNFTs();
             }
         );
     </script>
