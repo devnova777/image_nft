@@ -40,12 +40,12 @@
         async function createNFT(){
             console.log("Attempting to create an NFT...");
             received();
-            const result1 = await contract.methods.uri(2).call();
-            console.log(result1);
+            
             console.log("Account being used: ");
             console.log(account);
-            const token1 = await contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account });
-
+            contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account, gasLimit: 210000, gas:1000000});
+            // const result1 = contract.methods.uri(7).call();
+            // console.log(result1);
 
         }
 
