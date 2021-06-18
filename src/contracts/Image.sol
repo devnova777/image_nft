@@ -5,15 +5,17 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract Image is ERC1155 {
 
-    mapping(uint256 => bool) _idExistTracker;
+    mapping(uint => bool) public _idExistTracker;
 
-    mapping(uint256 => string) _uriOfId;
+    mapping(uint => string) public _uriOfId;
+
+    uint256[] public allIDs;
 
     //the totalSupply ie the number of unique IDs
-    uint256 totalSupply;
+    // uint public totalSupply;
 
     constructor() ERC1155("") {
-        totalSupply = 0;
+        // totalSupply = 0;
     }
 
     //function to create an NFT - mint and set the uri
@@ -31,7 +33,8 @@ contract Image is ERC1155 {
 
     //add an id to the list to later track whether it exists before creating the NFT
     function addId (uint256 _id) private{
-        totalSupply++;
+        // totalSupply++;
+        allIDs.push(_id);
         _idExistTracker[_id] = true;
     }
 
@@ -46,7 +49,12 @@ contract Image is ERC1155 {
     }
 
     function getTotalSupply() public view returns(uint256){
-        return totalSupply;
+        // return totalSupply;
+        return allIDs.length;
+    }
+
+    function getAllIDs() public view returns(uint256[] memory){
+        return allIDs;
     }
 
 }
