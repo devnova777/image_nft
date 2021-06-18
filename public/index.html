@@ -15,10 +15,10 @@
         <!-- <input type="text" id="address" name="address"><br><br> -->
         <label for="ID">ID:</label>
         <input type="text" id="ID" name="ID"><br><br>
-        <label for="amount">Amount:</label>
+        <label for="amount">Quantity:</label>
         <input type="text" id="amount" name="amount""><br><br>
-        <label for="url">url:</label>
-        <input type="text" id="url" name="url"><br><br>
+        <label for="url">uri:</label>
+        <input type="text" id="url" name="url" placeholder="ipfs://"><br><br>
         <input type="submit" value="Submit">
     </form>
 
@@ -43,21 +43,21 @@
         function getPinataAttributes(pinataJSON){
             var formattedString = '';
             for(i=0; i<pinataJSON.attributes.length; i++){
-                formattedString += pinataJSON.attributes[i].trait_type + ": " + pinataJSON.attributes[i].value + "\n";
+                formattedString += pinataJSON.attributes[i].trait_type + ": " + pinataJSON.attributes[i].value + " <br> ";
             }
-            console.log(formattedString);
+            // console.log(formattedString);
             return formattedString;
         }
 
         function getPinataImgSrc(pinataJSON){
             const baseURL = 'https://gateway.pinata.cloud/ipfs/';
-            console.log(baseURL + pinataJSON.image.split('://')[1]);
+            // console.log(baseURL + pinataJSON.image.split('://')[1]);
             return baseURL + pinataJSON.image.split('://')[1];
         }
 
         function updatePage(){
+            console.log("Updating the page...");
             location.reload();
-            getExistingNFTs();
         }
 
         async function createNFT(){
@@ -67,10 +67,7 @@
             console.log("Account being used: ");
             console.log(account);
             contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account, gasLimit: 210000, gas:1000000});
-            // const result1 = contract.methods.uri(7).call();
-            // console.log(result1);
-            updatePage();
-
+            // updatePage();
         }
 
         async function getExistingNFTs(){
@@ -78,31 +75,52 @@
             var pinataJSON;
             const totalSupply = await contract.methods.getTotalSupply().call();
             console.log("TotalSupply=" + totalSupply);
+
+            // const idMapping = await contract.methods._idListTracker().call();
             
-            console.log("URIs:");
-            var currentURI = '';
-            for(var i = 1; i<=totalSupply; i++){
-                currentURI = await contract.methods.uri(i).call();
-                // console.log(currentURI);
-                // const image = await contract.methods.imageList(i-1).call();
-                // images.push(image);
-                var added = baseURL + currentURI.split('://')[1];
-                // console.log(added);
-                $.getJSON(added, (returnedValue)=> {
-                    console.log("Successfully retreived json object from pinata."); 
-                    pinataJSON = returnedValue; 
-                    console.log(pinataJSON);
-                    console.log("Appending:" + pinataJSON.name);
-                    $('#all-retrieved-data').append('<div border-color="black"><h4> Name: '+pinataJSON.name+'</h4>'+
-                                                          '<p> Description: '+pinataJSON.description+'</p>'+
-                                                          '<p> URI: '+pinataJSON.image+'</p>'+
-                                                          '<p>'+ getPinataAttributes(pinataJSON) +'</p>'+
-                                                          '<img src=' + getPinataImgSrc(pinataJSON) +' height=500, width=400/>'+
-                                                    '</div>' + '<br>')
-                });
-                // console.log(pinataJSON);
+            if(totalSupply>0){
+                const allIDs = await contract.methods.getAllIDs().call();
+                console.log(allIDs);
+
+                // console.log("URIs:");
+                var currentURI = '';
+                for(var i = 0; i<totalSupply; i++){
+                    currentURI = await contract.methods.uri(allIDs[i]).call();
+                    console.log('allIDs['+i+'] is '+allIDs[i]);
+                    var id = allIDs[i];
+                    console.log(id);
+                    var added = baseURL + currentURI.split('://')[1];
+                    $.getJSON(added, (returnedValue)=> {
+                        console.log("Successfully retreived json object from pinata."); 
+                        pinataJSON = returnedValue; 
+                        console.log(pinataJSON);
+                        console.log("Appending:" + pinataJSON.name);
+                        console.log(allIDs);
+                        $('#all-retrieved-data').append('<div border-color="black"><h4> Name: '+pinataJSON.name+'</h4>'+
+                                                            '<p> Description: '+pinataJSON.description+'</p>'+
+                                                            '<p> URI: '+pinataJSON.image+'</p>'+
+                                                            '<p>'+ getPinataAttributes(pinataJSON) +'</p>'+
+                                                            '<img src=' + getPinataImgSrc(pinataJSON) +' height=500, width=400/>'+
+                                                            `<form action=\"javascript:changeURI(`+ id + `)\"> <label for=\"toChangeURI`+id+`\">Update Uri:</label><input type=\"text\" id=\"toChangeURI`+id+`\" name=\"toChangeURI\" placeholder=\"ipfs://\"><br><br><input type=\"submit\" value=\"Update URI\"></form>`+
+                                                        '</div>' + '<br>')
+                    });
+                    // console.log(pinataJSON);
+                }
+            }
+            else{
+                console.log("No NFTs created yet... Nothing to display here.")
             }
             
+            
+        }
+
+        function changeURI(id){
+            console.log("Changing URI of NFT with id=" + id + " to " + $('#toChangeURI'+id).val() );
+            // if($('#toChangeURI'+id).val()!=undefined){
+                console.log("am inside!");
+                contract.methods.setIdURI(id, $('#toChangeURI'+id).val()).send({ from: account, gasLimit: 210000, gas:1000000});
+            // }
+            // updatePage();
         }
 
         async function loadWeb3(){
@@ -147,14 +165,6 @@
 
             console.log("The Image Contract: ");
             console.log(contract);
-            // const ts = await contract.methods.totalSupply().call();
-            // totalSupply = ts;
-            // console.log(totalSupply);
-            // for(var i = 1; i<=totalSupply; i++){
-            //     const image = await contract.methods.imageList(i-1).call();
-            //     images.push(image);
-            // }
-            // console.log(images);
             }
             else{
             window.alert("The Smart Contract Image is not deployed on this network!");
