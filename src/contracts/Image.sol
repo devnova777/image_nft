@@ -33,7 +33,6 @@ contract Image is ERC1155 {
 
     //add an id to the list to later track whether it exists before creating the NFT
     function addId (uint256 _id) private{
-        // totalSupply++;
         allIDs.push(_id);
         _idExistTracker[_id] = true;
     }
@@ -48,11 +47,12 @@ contract Image is ERC1155 {
         return _uriOfId[id];
     }
 
+    //returns the length of allIDs[] i.e. the totalSupply
     function getTotalSupply() public view returns(uint256){
-        // return totalSupply;
         return allIDs.length;
     }
 
+    //returns the array of all IDs, allIDs
     function getAllIDs() public view returns(uint256[] memory){
         return allIDs;
     }
