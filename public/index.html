@@ -45,13 +45,11 @@
             for(i=0; i<pinataJSON.attributes.length; i++){
                 formattedString += pinataJSON.attributes[i].trait_type + ": " + pinataJSON.attributes[i].value + " <br> ";
             }
-            // console.log(formattedString);
             return formattedString;
         }
 
         function getPinataImgSrc(pinataJSON){
             const baseURL = 'https://gateway.pinata.cloud/ipfs/';
-            // console.log(baseURL + pinataJSON.image.split('://')[1]);
             return baseURL + pinataJSON.image.split('://')[1];
         }
 
@@ -81,21 +79,30 @@
                 const allIDs = await contract.methods.getAllIDs().call();
                 var currentURI = '';
                 for(var i = 0; i<totalSupply; i++){
-                    currentURI = await contract.methods.uri(allIDs[i]).call();
-                    var id = allIDs[i];
-                    var added = baseURL + currentURI.split('://')[1];
-                    $.getJSON(added, (returnedValue)=> {
-                        console.log("Successfully retreived json object from pinata."); 
-                        pinataJSON = returnedValue;
-                        console.log("Appending:" + pinataJSON.name);
-                        $('#all-retrieved-data').append('<div border-color="black"><h4> Name: '+pinataJSON.name+'</h4>'+
-                                                            '<p> Description: '+pinataJSON.description+'</p>'+
-                                                            '<p> URI: '+pinataJSON.image+'</p>'+
-                                                            '<p>'+ getPinataAttributes(pinataJSON) +'</p>'+
-                                                            '<img src=' + getPinataImgSrc(pinataJSON) +' height=500, width=400/>'+
-                                                            `<form action=\"javascript:changeURI(`+ id + `)\"> <label for=\"toChangeURI`+id+`\">Update Uri:</label><input type=\"text\" id=\"toChangeURI`+id+`\" name=\"toChangeURI\" placeholder=\"ipfs://\"><br><br><input type=\"submit\" value=\"Update URI\"></form>`+
-                                                        '</div>' + '<br>')
-                    });
+                currentURI = await contract.methods.uri(allIDs[i]).call();
+                var id = allIDs[i];
+                var added = baseURL + currentURI.split('://')[1];
+                $.getJSON(added, (returnedValue)=> {
+                    console.log("Successfully retreived json object from pinata."); 
+                    pinataJSON = returnedValue;
+                    console.log("Appending:" + pinataJSON.name);
+                    $('#all-retrieved-data').append(
+                    '<div border-color="black">'+
+                    '<h4> Name: '+pinataJSON.name+'</h4>'+
+                    '<p> Description: '+pinataJSON.description+'</p>'+
+                    '<p> URI: '+pinataJSON.image+'</p>'+
+                    '<p>'+ getPinataAttributes(pinataJSON) +'</p>'+
+                    '<img src=' + getPinataImgSrc(pinataJSON) 
+                    +' height=500, width=400/>'+
+                    `<form action=\"javascript:changeURI(`+ id + `)\">
+                    <label for=\"toChangeURI`+id+`\">
+                    Update Uri:
+                    </label>
+                    <input type=\"text\" id=\"toChangeURI`+id+`\" name=\"toChangeURI\" placeholder=\"ipfs://\">
+                    <br><br><input type=\"submit\" value=\"Update URI\">
+                    </form>`+
+                    '</div>' + '<br>')
+                });
                 }
             }
             else{
@@ -104,12 +111,10 @@
         }
 
         function changeURI(id){
-            console.log("Changing URI of NFT with id=" + id + " to " + $('#toChangeURI'+id).val() );
-            // if($('#toChangeURI'+id).val()!=undefined){
-                console.log("am inside!");
-                contract.methods.setIdURI(id, $('#toChangeURI'+id).val()).send({ from: account, gasLimit: 210000, gas:1000000});
-            // }
-            // updatePage();
+            console.log("Changing URI of NFT with id=" +id+" to "
+                        +$('#toChangeURI'+id).val());
+            contract.methods.setIdURI(id, $('#toChangeURI'+id).val()).send(
+                { from: account, gasLimit: 210000, gas:1000000});
         }
 
         async function loadWeb3(){
