@@ -11,11 +11,8 @@ contract Image is ERC1155 {
 
     uint256[] public allIDs;
 
-    //the totalSupply ie the number of unique IDs
-    // uint public totalSupply;
-
     constructor() ERC1155("") {
-        // totalSupply = 0;
+        //totalSupply is 0
     }
 
     //function to create an NFT - mint and set the uri
