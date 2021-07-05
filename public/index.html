@@ -66,7 +66,8 @@
             
             console.log("Account being used: ");
             console.log(account);
-            contract.methods.createNFT($('#ID').val(), $('#amount').val(), '0x0', $('#url').val()).send({ from: account, gasLimit: 210000, gas:1000000});
+            contract.methods.createNFT($('#ID').val(), $('#amount').val(), 
+            '0x0', $('#url').val()).send({ from: account, gasLimit: 210000, gas:1000000});
             // updatePage();
         }
 
@@ -75,27 +76,18 @@
             var pinataJSON;
             const totalSupply = await contract.methods.getTotalSupply().call();
             console.log("TotalSupply=" + totalSupply);
-
-            // const idMapping = await contract.methods._idListTracker().call();
             
             if(totalSupply>0){
                 const allIDs = await contract.methods.getAllIDs().call();
-                console.log(allIDs);
-
-                // console.log("URIs:");
                 var currentURI = '';
                 for(var i = 0; i<totalSupply; i++){
                     currentURI = await contract.methods.uri(allIDs[i]).call();
-                    console.log('allIDs['+i+'] is '+allIDs[i]);
                     var id = allIDs[i];
-                    console.log(id);
                     var added = baseURL + currentURI.split('://')[1];
                     $.getJSON(added, (returnedValue)=> {
                         console.log("Successfully retreived json object from pinata."); 
-                        pinataJSON = returnedValue; 
-                        console.log(pinataJSON);
+                        pinataJSON = returnedValue;
                         console.log("Appending:" + pinataJSON.name);
-                        console.log(allIDs);
                         $('#all-retrieved-data').append('<div border-color="black"><h4> Name: '+pinataJSON.name+'</h4>'+
                                                             '<p> Description: '+pinataJSON.description+'</p>'+
                                                             '<p> URI: '+pinataJSON.image+'</p>'+
@@ -104,14 +96,11 @@
                                                             `<form action=\"javascript:changeURI(`+ id + `)\"> <label for=\"toChangeURI`+id+`\">Update Uri:</label><input type=\"text\" id=\"toChangeURI`+id+`\" name=\"toChangeURI\" placeholder=\"ipfs://\"><br><br><input type=\"submit\" value=\"Update URI\"></form>`+
                                                         '</div>' + '<br>')
                     });
-                    // console.log(pinataJSON);
                 }
             }
             else{
                 console.log("No NFTs created yet... Nothing to display here.")
             }
-            
-            
         }
 
         function changeURI(id){
@@ -126,29 +115,33 @@
         async function loadWeb3(){
             console.log("loading web3...");
             if(window.ethereum){
-            console.log("modern web3 usage branch");
-            window.web3 = new Web3(window.ethereum);
-            await window.ethereum.enable();
+                console.log("modern web3 usage branch");
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
             }
             else if (window.web3){
-            console.log("old web3 usage branch");
-            window.web3 = new Web3(window.web3.currentProvider);
+                console.log("old web3 usage branch");
+                window.web3 = new Web3(window.web3.currentProvider);
             }
             else{
-            window.alert("Non-ethereum Browser being used. Install MetaMask!");
+                window.alert("Non-ethereum Browser being used. Install MetaMask!");
             }
         }
 
         async function loadBlockchain(){
             console.log("loading blockchain...");
             const web3 = window.web3;
-            const ethaccounts = await web3.eth.getAccounts(); //get all accounts in metamask
+
+            //get all accounts in metamask
+            const ethaccounts = await web3.eth.getAccounts(); 
+
             //the eth account used from metamask
             account = ethaccounts[0];
             console.log("Account: ");
             console.log(account);
 
-            const networkId = await web3.eth.net.getId(); // to find the correct address
+            // to find the correct address
+            const networkId = await web3.eth.net.getId(); 
             console.log(networkId);
 
             const networkData = Image.networks[networkId];
@@ -157,17 +150,17 @@
             console.log(networkData);
 
             if(networkData){
-            const abi = Image.abi;
-            const address = networkData.address;
-            const c = new web3.eth.Contract(abi, address);
+                const abi = Image.abi;
+                const address = networkData.address;
+                const c = new web3.eth.Contract(abi, address);
 
-            contract = c;
+                contract = c;
 
-            console.log("The Image Contract: ");
-            console.log(contract);
+                console.log("The Image Contract: ");
+                console.log(contract);
             }
             else{
-            window.alert("The Smart Contract Image is not deployed on this network!");
+                window.alert("The Smart Contract Image is not deployed on this network!");
             }
         }
 
